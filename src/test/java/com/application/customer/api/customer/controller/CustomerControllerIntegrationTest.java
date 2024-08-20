@@ -1,6 +1,9 @@
 package com.application.customer.api.customer.controller;
 
 import com.application.customer.api.customer.entity.Customer;
+import com.application.customer.api.customer.entity.CustomerDetails;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.bytebuddy.description.method.MethodDescription;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,10 +25,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 // look for main application class and use it to start context with this application
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT) // with mocked -> only beans related to web layer
@@ -121,5 +121,42 @@ public class CustomerControllerIntegrationTest {
 
         Assertions.assertEquals(HttpStatus.OK, pageCustomerDataEntity.getStatusCode(), "Status code must be 200 OK");
 
+    }
+
+    @Test
+    @DisplayName("Update Customer Data")
+    void testUpdateCustomerData_whenUpdatedDataProvided_thenUpdateAndReturnUpdatedData() throws JSONException, JsonProcessingException {
+//        Arrange
+
+        JSONObject updatedCustomerDetails = new JSONObject();
+        updatedCustomerDetails.put("id", "1");
+        updatedCustomerDetails.put("street", "13th Street");
+        updatedCustomerDetails.put("customerName", "Test Customer");
+        updatedCustomerDetails.put("latitude", "23 N");
+        updatedCustomerDetails.put("longitude", "80.12");
+        updatedCustomerDetails.put("siteId", "101");
+        updatedCustomerDetails.put("pin", "812345");
+        updatedCustomerDetails.put("location", "Chennai Test");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> request = new HttpEntity<>(updatedCustomerDetails.toString(), headers);
+
+        //        Act
+        ResponseEntity<CustomerDetails> response = testRestTemplate
+                .exchange("/api/v1/customer-details",
+                        HttpMethod.PUT,
+                        request,
+                        CustomerDetails.class);
+
+        //        Assert
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode(),
+                "Status Code should be 200");
+        Assertions.assertEquals(updatedCustomerDetails.get("id"), response.getBody().getId().toString(),
+                "After Updation both objects ID should be same");
+        Assertions.assertEquals(updatedCustomerDetails.get("customerName"), response.getBody().getCustomerName().toString(),
+                "After Updation both CustomerName should be same");
     }
 }
